@@ -1,11 +1,18 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { BorderBeam } from "border-beam";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { ArrowUp02Icon } from "@hugeicons/core-free-icons";
 import { OrbLoader, type OrbState } from "@/lib/orbs";
 import { cn } from "@/lib/utils";
 
 const PROMPT = "Why is the checkout page slow on mobile?";
-const STEPS = ["Read 4 files in app/checkout", "Searched the codebase for date imports", "Compared bundle sizes"];
+const STEPS = [
+  "Read 4 files in app/checkout",
+  "Searched the codebase for date imports",
+  "Compared bundle sizes",
+];
 const ANSWER =
   "The checkout bundle loads the full date library on first paint, about 180 KB on mobile. Lazy-loading it behind the delivery picker fixes most of the delay. I've drafted the change.";
 
@@ -36,7 +43,8 @@ export function AgentChatPreview({ state }: { state: OrbState }) {
   useEffect(() => {
     const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
     const timers: number[] = [];
-    const at = (ms: number, fn: () => void) => timers.push(window.setTimeout(fn, ms));
+    const at = (ms: number, fn: () => void) =>
+      timers.push(window.setTimeout(fn, ms));
 
     if (reduced) {
       at(0, () => {
@@ -53,9 +61,12 @@ export function AgentChatPreview({ state }: { state: OrbState }) {
     });
     at(T_USER, () => setPhase("user"));
     at(T_THINK, () => setPhase("thinking"));
-    STEPS.forEach((_, i) => at(T_THINK + (i + 1) * T_STEP, () => setSteps(i + 1)));
+    STEPS.forEach((_, i) =>
+      at(T_THINK + (i + 1) * T_STEP, () => setSteps(i + 1)),
+    );
     at(T_STREAM, () => setPhase("streaming"));
-    for (let i = 1; i <= ANSWER.length; i++) at(T_STREAM + i * CHAR_MS, () => setChars(i));
+    for (let i = 1; i <= ANSWER.length; i++)
+      at(T_STREAM + i * CHAR_MS, () => setChars(i));
     const end = T_STREAM + ANSWER.length * CHAR_MS;
     at(end, () => setPhase("done"));
     at(end + HOLD, () => setLoop((n) => n + 1));
@@ -67,56 +78,102 @@ export function AgentChatPreview({ state }: { state: OrbState }) {
   const busy = phase === "user" || thinking || phase === "streaming";
 
   return (
-    <div className="flex h-[26rem] w-full max-w-md flex-col overflow-hidden rounded-2xl bg-white/2 ring-1 ring-white/6 ring-inset">
-      <div className="flex items-center gap-2 border-b border-white/5 px-4 py-3">
-        <span className="size-2 rounded-full bg-white/25" />
-        <span className="text-sm text-white/60">Assistant</span>
-      </div>
+    // The beam rides the card's border while the agent works and fades out
+    // with the answer, so the glow says "thinking" just as the orb does.
+    // Mono to stay inside the site's black and white; radius is read from
+    // the card itself.
+    <BorderBeam
+      size="md"
+      colorVariant="mono"
+      theme="dark"
+      strength={1}
+      brightness={1.8}
+      active={busy}
+      className="w-full max-w-md"
+    >
+      <div className="flex h-[26rem] w-full flex-col overflow-hidden rounded-2xl bg-(--bg) ring-1 ring-white/6 ring-inset">
+        <div className="flex items-center gap-2 border-b border-white/5 px-4 py-3">
+          <span className="size-2 rounded-full bg-white/25" />
+          <span className="text-sm text-white/60">Assistant</span>
+        </div>
 
-      <div className="flex flex-1 flex-col gap-5 overflow-hidden px-4 py-5 text-sm leading-relaxed">
-        {phase !== "idle" && (
-          <div className="chat-enter self-end rounded-2xl rounded-br-md bg-white/8 px-3.5 py-2 text-white/85">{PROMPT}</div>
-        )}
+        <div className="flex flex-1 flex-col gap-5 overflow-hidden px-4 py-5 text-sm leading-relaxed">
+          {phase !== "idle" && (
+            <div className="chat-enter self-end rounded-2xl rounded-br-md bg-white/8 px-3.5 py-2 text-white/85">
+              {PROMPT}
+            </div>
+          )}
 
-        {(thinking || answering) && (
-          <div className="chat-enter flex flex-col gap-2.5">
-            {/* The status line: the orb is replaced by the answer once it starts. */}
-            {thinking ? (
-              <OrbLoader state={state} size={20} theme="dark" className="text-white" />
-            ) : (
-              <span className="text-xs text-white/35">Worked for 4s · {STEPS.length} steps</span>
-            )}
-            {thinking && (
-              <ul className="flex flex-col gap-1.5 border-l border-white/8 pl-3">
-                {/* Done steps plus the one in progress; later ones are not shown yet. */}
-                {STEPS.slice(0, Math.min(steps + 1, STEPS.length)).map((step, i) => (
-                  <li key={step} className={cn("chat-enter flex items-center gap-2 text-xs", i < steps ? "text-white/50" : "text-white/30")}>
-                    <span className="w-3 text-center text-white/40">{i < steps ? "✓" : "·"}</span>
-                    {step}
-                  </li>
-                ))}
-              </ul>
-            )}
-            {answering && (
-              <p className="text-white/75">
-                {ANSWER.slice(0, chars)}
-                {phase === "streaming" && <span className="ml-0.5 inline-block h-3.5 w-1.5 translate-y-0.5 animate-pulse bg-white/60" />}
-              </p>
-            )}
+          {(thinking || answering) && (
+            <div className="chat-enter flex flex-col gap-2.5">
+              {/* The status line: the orb is replaced by the answer once it starts. */}
+              {thinking ? (
+                <OrbLoader
+                  state={state}
+                  size={20}
+                  theme="dark"
+                  className="text-white"
+                />
+              ) : (
+                <span className="text-xs text-white/35">
+                  Worked for 4s · {STEPS.length} steps
+                </span>
+              )}
+              {thinking && (
+                <ul className="flex flex-col gap-1.5 border-l border-white/8 pl-3">
+                  {/* Done steps plus the one in progress; later ones are not shown yet. */}
+                  {STEPS.slice(0, Math.min(steps + 1, STEPS.length)).map(
+                    (step, i) => (
+                      <li
+                        key={step}
+                        className={cn(
+                          "chat-enter flex items-center gap-2 text-xs",
+                          i < steps ? "text-white/50" : "text-white/30",
+                        )}
+                      >
+                        <span className="w-3 text-center text-white/40">
+                          {i < steps ? "✓" : "·"}
+                        </span>
+                        {step}
+                      </li>
+                    ),
+                  )}
+                </ul>
+              )}
+              {answering && (
+                <p className="text-white/75">
+                  {ANSWER.slice(0, chars)}
+                  {phase === "streaming" && (
+                    <span className="ml-0.5 inline-block h-3.5 w-1.5 translate-y-0.5 animate-pulse bg-white/60" />
+                  )}
+                </p>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Composer: the button becomes "stop" while the agent works. */}
+        <div className="flex items-center gap-2 border-t border-white/5 px-3 py-3">
+          <div className="flex-1 truncate rounded-full bg-white/4 px-4 py-2 text-sm text-white/30">
+            Ask a follow-up…
           </div>
-        )}
+          <span
+            aria-hidden="true"
+            className={cn(
+              "grid size-8 place-items-center rounded-full text-sm transition-colors",
+              busy ? "bg-white/10 text-white/70" : "bg-white text-black",
+            )}
+          >
+            {/* Drawn shapes, not text glyphs: characters sit on the font's
+                baseline, so the grid cannot centre them exactly. */}
+            {busy ? (
+              <span className="size-2.5 rounded-[2px] bg-current" />
+            ) : (
+              <HugeiconsIcon icon={ArrowUp02Icon} size={16} color="currentColor" strokeWidth={2} />
+            )}
+          </span>
+        </div>
       </div>
-
-      {/* Composer: the button becomes "stop" while the agent works. */}
-      <div className="flex items-center gap-2 border-t border-white/5 px-3 py-3">
-        <div className="flex-1 truncate rounded-lg bg-white/4 px-3 py-2 text-sm text-white/30">Ask a follow-up…</div>
-        <span
-          aria-hidden="true"
-          className={cn("grid size-8 place-items-center rounded-lg text-sm transition-colors", busy ? "bg-white/10 text-white/70" : "bg-white text-black")}
-        >
-          {busy ? "■" : "↑"}
-        </span>
-      </div>
-    </div>
+    </BorderBeam>
   );
 }

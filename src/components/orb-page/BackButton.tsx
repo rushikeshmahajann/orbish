@@ -24,15 +24,12 @@ export function BackButton() {
           router.back();
         }
       }}
-      className="custom-button flex items-center gap-1.5 rounded-full py-1.5 pr-3.5 pl-2.5 font-display text-sm tracking-tight outline-none focus-visible:ring-2 focus-visible:ring-white/40"
+      // Icon-only, so the name goes on the link for screen readers and as a tooltip.
+      aria-label="Back to all orbs"
+      title="Back to all orbs"
+      className="custom-button grid size-9 place-items-center rounded-full outline-none focus-visible:ring-2 focus-visible:ring-white/40"
     >
-      <HugeiconsIcon
-        icon={ArrowLeft01Icon}
-        size={16}
-        color="currentColor"
-        strokeWidth={1.75}
-      />
-      All orbs
+      <HugeiconsIcon icon={ArrowLeft01Icon} size={18} color="currentColor" strokeWidth={1.75} aria-hidden="true" />
     </Link>
   );
 }
