@@ -1,26 +1,167 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+/* `dark:` follows the nearest [data-theme="dark"] ancestor. The landing page
+   is dark-only and sets it on <main>. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
+/* Register the next/font families in Tailwind's theme so they emit utilities.
+   Always go through the next/font CSS variables rather than naming the family
+   directly: the variable pairs the font with its metric-matched fallback,
+   which is what prevents layout shift while the font loads. */
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+  /* Headings, labels and the wordmark. A system font, not a web font:
+     machines without Helvetica Neue fall back through Helvetica and Arial. */
+  --font-display: "Helvetica Neue", Helvetica, Arial, sans-serif;
+
+  /* Tailwind ships --color-white/--color-black as #fff/#000. Every
+     text-white/N, bg-white/N and bg-black/N utility derives from these, so
+     redefining them keeps the whole product on oklch values. */
+  --color-white: oklch(1 0 0);
+  --color-black: oklch(0 0 0);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* === Site tokens === */
+:root {
+  /* Page background for every route. Not pure black: on OLED that switches
+     pixels fully off, which smears on scroll and hard-edges against content. */
+  --bg: oklch(0.145 0 0);
+  --text: oklch(0.958 0 0);
+
+  /* Surface tint used by .custom-button. Plain CSS only, so it lives here
+     rather than in @theme. */
+  --background-light-50: oklch(0.321 0 0 / 0.5);
+
+}
+
+* {
+  box-sizing: border-box;
+}
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+body {
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  letter-spacing: -0.01em;
+  min-height: 100vh;
+}
+
+/* === Bezel button: the house raised surface ===
+   Used by the package switcher's indicator and the icon tile.
+   See soonish's bezel-button skill for the reasoning behind each layer. */
+.custom-button {
+  position: relative; /* anchors the ::before ring */
+  color: oklch(1 0 0 / 0.83);
+
+  /* Negative Y engraves the text into a dark surface lit from above. */
+  text-shadow: 0 -1px 0 oklch(0 0 0 / 0.5);
+
+  /* The ellipse is anchored OUTSIDE the button (-20px), so the highlight falls
+     across the top-left shoulder instead of sitting centred. */
+  background:
+    radial-gradient(ellipse at -20px top, oklch(1 0 0 / 0.05), oklch(1 0 0 / 0)),
+    var(--background-light-50, oklch(0.321 0 0 / 0.5));
+
+  /* One declaration: layers 1-2 are the rims; 3-7 are a shadow ladder where
+     each step gets tighter AND more opaque, approximating contact occlusion. */
+  box-shadow:
+    inset 0 0 0 1px oklch(1 0 0 / 0.04),
+    0 0 0 1px oklch(0 0 0 / 0.45),
+    0 40px 11px oklch(0 0 0 / 0.01),
+    0 26px 10px oklch(0 0 0 / 0.025),
+    0 14px 9px oklch(0 0 0 / 0.1),
+    0 6px 6px oklch(0 0 0 / 0.15),
+    0 2px 4px oklch(0 0 0 / 0.25);
+
+  /* Release curve: slow and eased-out. The press overrides this with a much
+     shorter duration — asymmetric timing reads as mechanical. */
+  transition:
+    translate 0.24s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.24s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Shine border — a 1.5px ring, bright along the top arc, fading toward the
+   bottom. A gradient painted over the whole element, then masked down to the
+   inset frame; radius is inherited so it tracks whatever the element uses. */
+.custom-button::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  border: 1.5px solid transparent;
+  background: linear-gradient(
+      180deg,
+      oklch(1 0 0 / 0.3) 0%,
+      oklch(0 0 0 / 0.48) 41%,
+      oklch(0 0 0 / 0.26) 75%,
+      oklch(1 0 0 / 0.1) 100%
+    )
+    border-box;
+  mix-blend-mode: overlay;
+  -webkit-mask:
+    linear-gradient(oklch(0 0 0) 0 0) padding-box,
+    linear-gradient(oklch(0 0 0) 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(oklch(0 0 0) 0 0) padding-box,
+    linear-gradient(oklch(0 0 0) 0 0);
+  mask-composite: exclude;
+}
+
+/* Scoped to `button` so the toggle's indicator <span> can never pick up the
+   pressed look as its resting state. */
+button.custom-button:active {
+  translate: 0 1px;
+  transition-duration: 0.06s;
+  box-shadow:
+    inset 0 0 0 1px oklch(1 0 0 / 0.04),
+    0 0 0 1px oklch(0 0 0 / 0.45),
+    0 20px 10px oklch(0 0 0 / 0.01),
+    0 12px 10px oklch(0 0 0 / 0.05),
+    0 6px 9px oklch(0 0 0 / 0.17),
+    0 2px 4px oklch(0 0 0 / 0.29),
+    0 1px 2px oklch(0 0 0 / 0.33);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .custom-button,
+  button.custom-button:active {
+    transition-duration: 0.01ms;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* === Code blocks: sugar-high token colours ===
+   Monochrome by strength — keywords and names bright, punctuation and
+   comments dim, strings a soft grey — to match the black-and-white site. */
+.code-block {
+  --sh-identifier: oklch(1 0 0 / 0.72);
+  --sh-keyword: oklch(1 0 0 / 0.92);
+  --sh-class: oklch(1 0 0 / 0.95);
+  --sh-entity: oklch(1 0 0 / 0.95);
+  --sh-property: oklch(1 0 0 / 0.62);
+  --sh-jsxliterals: oklch(1 0 0 / 0.72);
+  --sh-sign: oklch(1 0 0 / 0.38);
+  --sh-comment: oklch(1 0 0 / 0.3);
+  --sh-string: oklch(0.8 0 0);
+}
+.code-block .sh__token--comment {
+  font-style: italic;
+}
+
+/* Chat preview on the orb pages: messages rise in. */
+@keyframes chat-enter {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+.chat-enter {
+  animation: chat-enter 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .chat-enter { animation: none; }
 }

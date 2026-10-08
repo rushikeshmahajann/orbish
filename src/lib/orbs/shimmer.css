@@ -1,0 +1,36 @@
+/* ShimmerText: a highlight band clipped to a copy of the text, swept right → left.
+   Ships with the library so an installed ShimmerText / OrbLoader works without
+   any global CSS. Override --shimmer-hi to change the highlight colour. */
+:root {
+  --shimmer-hi: #0d0d0d;
+}
+[data-theme="dark"],
+.dark {
+  --shimmer-hi: #ffffff;
+}
+
+.orb-shimmer {
+  position: relative;
+  display: inline-block;
+}
+.orb-shimmer::before {
+  content: attr(data-text);
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: linear-gradient(90deg, transparent 0%, transparent 40%, var(--shimmer-hi) 50%, transparent 60%, transparent 100%);
+  background-size: 400% 100%;
+  background-repeat: no-repeat;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  animation: orb-shimmer 2s linear infinite;
+}
+@keyframes orb-shimmer {
+  from { background-position: 100% 0; }
+  to { background-position: 0 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .orb-shimmer::before { animation: none; }
+}
