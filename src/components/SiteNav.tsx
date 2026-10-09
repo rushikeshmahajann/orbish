@@ -5,12 +5,10 @@ import { GitHubStar } from "./GitHubStar";
 import { OrbishIcon } from "./OrbishIcon";
 
 /**
- * The site navbar: the icon as the home link on the left; X and a GitHub
- * star button (with the live count) on the right. Shared by the landing
+ * The site navbar: the icon as the home link on the left; Docs, X and a
+ * GitHub star button (with the live count) on the right. Shared by the landing
  * page (floating over the hero) and any future docs header, so the two can
  * never drift apart — only the positioning differs, passed in as `className`.
- *
- * Add a "Docs" pill here once /docs exists.
  */
 export function SiteNav({ className }: { className?: string }) {
   return (
@@ -19,6 +17,12 @@ export function SiteNav({ className }: { className?: string }) {
         <OrbishIcon size={32} />
       </Link>
       <div className="flex items-center gap-2">
+        <Link
+          href="/docs"
+          className="flex items-center gap-1.5 rounded-full bg-black/80 px-3 py-1 text-sm text-white/90 backdrop-blur-xl transition-colors outline-none hover:text-white focus-visible:ring-2 focus-visible:ring-white/40"
+        >
+          Docs
+        </Link>
         {/* Frosted pills: the backdrop is blurred and darkened rather than
             covered, so the hero field behind still shows through while the
             labels stay legible. */}

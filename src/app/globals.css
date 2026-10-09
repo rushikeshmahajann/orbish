@@ -29,6 +29,11 @@
   --bg: oklch(0.145 0 0);
   --text: oklch(0.958 0 0);
 
+  /* The one accent: white. Kept as a token because the docs (ported from
+     soonish, which had a colour accent menu) mark the current page, callouts
+     and list bullets with it. */
+  --brand: oklch(1 0 0);
+
   /* Surface tint used by .custom-button. Plain CSS only, so it lives here
      rather than in @theme. */
   --background-light-50: oklch(0.321 0 0 / 0.5);

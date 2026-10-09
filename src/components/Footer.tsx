@@ -4,9 +4,10 @@ import { OrbishIcon } from "./OrbishIcon";
 import { HoverPhotoLink } from "./HoverPhotoLink";
 import { WORDMARK_CLASS } from "./WordmarkBand";
 
-// Add Docs / Installation here once /docs exists. While empty, the column
-// below still renders as a spacer so the icon stays centred.
-const LINKS: readonly { href: string; label: string }[] = [];
+const LINKS: readonly { href: string; label: string }[] = [
+  { href: "/docs", label: "Docs" },
+  { href: "/docs/installation", label: "Installation" },
+];
 
 /**
  * Landing-page footer: the app icon, a one-line pitch, the main links, and a
