@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { BorderBeam } from "border-beam";
+import { MetalFx, useMetalBend } from "metal-fx";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { ArrowUp02Icon } from "@hugeicons/core-free-icons";
 import { OrbLoader, type OrbState } from "@/lib/orbs";
@@ -39,6 +40,9 @@ export function AgentChatPreview({ state }: { state: OrbState }) {
   const [steps, setSteps] = useState(0);
   const [chars, setChars] = useState(0);
   const [loop, setLoop] = useState(0);
+  const metalRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLDivElement>(null);
+  useMetalBend(metalRef);
 
   useEffect(() => {
     const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -152,26 +156,48 @@ export function AgentChatPreview({ state }: { state: OrbState }) {
           )}
         </div>
 
-        {/* Composer: the button becomes "stop" while the agent works. */}
+        {/* Composer: the metal button shows "stop" while the agent works. */}
         <div className="flex items-center gap-2 border-t border-white/5 px-3 py-3">
-          <div className="flex-1 truncate rounded-full bg-white/4 px-4 py-2 text-sm text-white/30">
+          <div
+            ref={inputRef}
+            className="flex-1 truncate rounded-full bg-white/4 px-4 py-2 text-sm text-white/30"
+          >
             Ask a follow-up…
           </div>
-          <span
-            aria-hidden="true"
-            className={cn(
-              "grid size-8 place-items-center rounded-full text-sm transition-colors",
-              busy ? "bg-white/10 text-white/70" : "bg-white text-black",
-            )}
+          {/* Liquid-metal ring (metal-fx). Silver to stay in black and white;
+              the input beside it catches a soft reflection, and the cursor
+              dents the metal as it passes. The button keeps a dark fill
+              because the ring reads against a dark surface. Without WebGL2
+              it falls back to the plain button. */}
+          <MetalFx
+            ref={metalRef}
+            preset="silver"
+            variant="circle"
+            theme="dark"
+            innerShadow
+            reflectionTargets={[{ ref: inputRef, strength: 0.5 }]}
           >
-            {/* Drawn shapes, not text glyphs: characters sit on the font's
+            <span
+              aria-hidden="true"
+              className={cn(
+                "grid size-9 place-items-center rounded-full bg-[#141414] transition-colors",
+                busy ? "text-white/60" : "text-white",
+              )}
+            >
+              {/* Drawn shapes, not text glyphs: characters sit on the font's
                 baseline, so the grid cannot centre them exactly. */}
-            {busy ? (
-              <span className="size-2.5 rounded-[2px] bg-current" />
-            ) : (
-              <HugeiconsIcon icon={ArrowUp02Icon} size={16} color="currentColor" strokeWidth={2} />
-            )}
-          </span>
+              {busy ? (
+                <span className="size-2.5 rounded-[2px] bg-current" />
+              ) : (
+                <HugeiconsIcon
+                  icon={ArrowUp02Icon}
+                  size={16}
+                  color="currentColor"
+                  strokeWidth={2}
+                />
+              )}
+            </span>
+          </MetalFx>
         </div>
       </div>
     </BorderBeam>
